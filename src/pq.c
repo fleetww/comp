@@ -64,17 +64,32 @@ Node *PQ_extract(PQ *pq) {
 		exit(2);
 	}
 
-	Node *min = pq->heap[0];
-	pq->heap[0] = pq->heap[pq->size-1];
-	pq->size--;
+	Node *res = pq->heap[0];
+	pq->heap[0] = pq->heap[--pq->size];
 
-	int idx = 0;
-	int left = (idx * 2) + 1;
-	int right = (idx * 2) + 2;
+	unsigned int idx = 0;
+	while (idx < pq->size) {
+		unsigned int min = idx;
+		unsigned int left = (idx * 2) + 1;
+		unsigned int right = (idx * 2) + 2;
 
-	int max = (pq->heap[left]->freq >= pq->heap[right]->freq) ? left : right;
+		if (left < pq->size && pq->heap[left]->freq < pq->heap[min]->freq) {
+			min = left;
+		}
+
+		if (right < pq->size && pq->heap[right]->freq < pq->heap[min]->freq) {
+			min = right;
+		}
+
+		if (min != idx) {
+			PQ_swap_nodes(pq, min, idx);
+			idx = min;
+		} else {
+			break;
+		}
+	}
 
 
-
-	return min;
+	return res;
 }
+
