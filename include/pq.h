@@ -15,7 +15,7 @@ Node *Node_new(char byte, unsigned long long freq);
 
 PQ *PQ_new(unsigned int capacity);
 
-void PQ_insert(PQ *pq, char byte, unsigned long long freq);
+void PQ_insert(PQ *pq, Node *node);
 
 void PQ_swap_nodes(PQ *pq, unsigned int a, unsigned int b);
 

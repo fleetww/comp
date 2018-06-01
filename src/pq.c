@@ -31,26 +31,25 @@ void PQ_swap_nodes(PQ *pq, unsigned int a, unsigned int b) {
 	return;
 }
 
-void PQ_insert(PQ *pq, char byte, unsigned long long freq) {
+void PQ_insert(PQ *pq, Node *node) {
 	if (pq->size >= pq->capacity) {
 		dprintf(2, "Inserting into max capacity priority queue\n");
 		exit(1);
 		return;
 	}
 
-	Node *temp = Node_new(byte, freq);
-	pq->heap[pq->size] = temp;
+	pq->heap[pq->size] = node;
 	unsigned int idx = pq->size;
 	pq->size++;
 
 
 	while (idx) { //while not root
 		unsigned int parent = (idx - 1) / 2;
-		//Can move temp up one layer
-		if (pq->heap[parent]->freq > temp->freq) {
+		//Can move node up one layer
+		if (pq->heap[parent]->freq > node->freq) {
 			PQ_swap_nodes(pq, parent, idx);
 			idx = parent;
-		} else { //temps final location is idx
+		} else { //nodes final location is idx
 			break;
 		}
 	}
@@ -59,7 +58,7 @@ void PQ_insert(PQ *pq, char byte, unsigned long long freq) {
 }
 
 Node *PQ_extract(PQ *pq) {
-	if (pq->size == 0) {
+	if (!pq->size) {
 		dprintf(2, "Extracting from empty priority queue\n");
 		exit(2);
 	}
