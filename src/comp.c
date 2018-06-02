@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ctype.h>
+#include <string.h>
 #include "pq.h"
 
 #define BUFSIZE 4096
+
+//Returns number of bytes given the number of bits involved
+#define NBYTES(N) ((unsigned int)(((N)+7)/8))
 
 
 typedef struct Encoding {
@@ -87,7 +91,7 @@ int main(int argc, char** argv) {
 
 	Node *root = PQ_extract(pq);
 
-	Encoding *codes = GenerateCodes(root);
+	//Encoding *codes = GenerateCodes(root);
 
 	//Test code
 	PreFixPrint(root);
@@ -95,19 +99,62 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void GenerateCodesHelper(Node *node, Encoding *codes, Encoding code) {
+void GenerateCodesHelper(Node *node, Encoding *codes, unsigned int nbits, unsigned char *code) {
 	//Node is an actual encoding, not a joined node
 	if (!node->left && !node->right) {
-
+		memcpy(codes[node->byte].code, code, 32);
+		return;
 	}
+
+	if (node->left) {
+		unsigned char new_code[32];
+		for (unsigned int i = 0; i < 32; i++) {
+			new_code[i] = code[i];
+		}
+		unsigned int next_byte = NBYTES(nbits+1);
+
+		if (next_byte==32) {
+			dprintf(2, "Inserting past end of code\n");
+			exit(4);
+		}
+
+		//number of bits from left of current byte
+		unsigned int rmbit = nbits - 8*next_byte;
+		code[next_byte] |= (0x1 << (8-rmbit+1));
+
+		GenerateCodesHelper(node->left, codes, nbits+1, new_code);
+	}
+	if (node->right) {
+		unsigned char new_code[32];
+		for (unsigned int i = 0; i < 32; i++) {
+			new_code[i] = code[i];
+		}
+		unsigned int next_byte = NBYTES(nbits+1);
+
+		//Sanity check, this shouldn't actually be reachable
+		if (next_byte==32) {
+			dprintf(2, "Inserting past end of code\n");
+			exit(4);
+		}
+
+		//number of bits from right of current byte
+		unsigned int rmbit = nbits - 8*next_byte;
+		code[next_byte] |= (0x1 << (8-rmbit+1));
+
+		GenerateCodesHelper(node->right, codes, nbits+1, new_code);
+	}
+
+	return;
 }
 
+//codes[byte]=encoding struct
 Encoding *GenerateCodes(Node *root) {
 	Encoding *codes = calloc(256, sizeof(Encoding));
 
-	Encoding code = Encoding_new();
+	unsigned char temp[32];
+	memset(temp, 0, 32);
 
-	GenerateCodesHelper(root, codes, code);
+	GenerateCodesHelper(root, codes, 0, temp);
 
 	return codes;
 }

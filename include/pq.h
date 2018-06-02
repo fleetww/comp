@@ -1,5 +1,5 @@
 typedef struct Node {
-	char byte;
+	unsigned char byte;
 	unsigned long long freq;
 	struct Node *left, *right;
 } Node;
